@@ -1,0 +1,27 @@
+[workspace]
+resolver = '2'
+members = [
+  "spellrs_filetype"
+]
+
+[package]
+name = "spellrs"
+version = "0.1.0"
+authors = ["Roy E. Crippen IV"]
+description = "Performant spell checker ported from streesidesoftware's `cspell`"
+repository.workspace = true
+license.workspace = true
+include.workspace = true
+
+[workspace.package]
+license = "MIT"
+edition = "2021"
+include = [
+  "build.rs",
+  "src/**/*",
+  "Cargo.toml",
+  "LICENSE*",
+  "README.md",
+]
+
+[dependencies]

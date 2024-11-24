@@ -1,0 +1,12 @@
+[package]
+name = "spellrs_filetype"
+description = "Library to determine file types based upon the file name."
+repository.workspace = true
+license.workspace = true
+include.workspace = true
+authors.workspace = true
+version.workspace = true
+keywords = ["spellrs", "filetypes"]
+
+
+[lib]
