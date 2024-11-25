@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use crate::{
     definitions::DEFINITIONS,
     types::{FileTypeDefinition, FileTypeFormat, FileTypeId},
@@ -8,8 +6,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use std::{
     collections::{HashMap, HashSet},
-    ops::Index,
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 type ExtensionToFileTypeIdMapSet = HashMap<String, HashSet<String>>;

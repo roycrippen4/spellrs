@@ -26,3 +26,6 @@ include = [
   "LICENSE*",
   "README.md",
 ]
+
+[dependencies]
+spellrs_filetype = { path = "./spellrs_filetype" }
