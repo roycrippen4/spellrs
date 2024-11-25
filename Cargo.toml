@@ -7,15 +7,18 @@ members = [
 [package]
 name = "spellrs"
 version = "0.1.0"
-authors = ["Roy E. Crippen IV"]
 description = "Performant spell checker ported from streesidesoftware's `cspell`"
 repository.workspace = true
 license.workspace = true
 include.workspace = true
+edition.workspace = true
+authors = ["Roy E. Crippen IV"]
 
 [workspace.package]
+authors = ["Roy E. Crippen IV"]
 license = "MIT"
 edition = "2021"
+repository = "https://github.com/roycrippen4/spellrs"
 include = [
   "build.rs",
   "src/**/*",
@@ -23,5 +26,3 @@ include = [
   "LICENSE*",
   "README.md",
 ]
-
-[dependencies]
