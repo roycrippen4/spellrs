@@ -1,4 +1,5 @@
 pub type FileTypeId = String;
+#[derive(Debug)]
 pub struct FileTypeExtensionDefinition {
     pub id: FileTypeId,
     /// List of extensions starting with '.'
@@ -8,8 +9,10 @@ pub struct FileTypeExtensionDefinition {
     pub filenames: Option<Vec<String>>,
     /// Indicates that it is a `Text` or `Binary` file type
     pub format: Option<FileTypeFormat>,
+    #[allow(unused)]
     /// Optional Description
     pub description: Option<String>,
+    #[allow(unused)]
     /// Optional Comment
     pub comment: Option<String>,
 }
@@ -34,6 +37,7 @@ impl FileTypeExtensionDefinition {
     }
 }
 
+#[allow(unused)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FileTypeFormat {
     Text,
@@ -41,4 +45,3 @@ pub enum FileTypeFormat {
 }
 
 pub type FileTypeDefinition = FileTypeExtensionDefinition;
-pub type FileTypeDefinitions = Vec<FileTypeDefinition>;
