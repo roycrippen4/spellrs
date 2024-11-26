@@ -2,6 +2,7 @@ mod data_url;
 mod default_file_url_builder;
 mod file_url;
 mod file_url_builder;
+pub mod traits;
 mod url;
 
 pub use data_url::{is_data_url, url_basename};
@@ -10,7 +11,8 @@ pub use default_file_url_builder::{
 };
 pub use file_url::{is_file_url, to_file_path_or_href};
 pub use file_url_builder::{BuilderOptions, FileUrlBuilder, PathInterface};
+pub use traits::*;
 pub use url::{
-    add_trailing_slash, basename_of_url_pathname, has_protocol, is_not_url_like, is_url,
-    is_url_like, to_url, url_dirname, url_parent, url_relative,
+    add_trailing_slash, basename_of_url_pathname, decode_uri_component, has_protocol,
+    is_not_url_like, is_url, is_url_like, to_url, url_dirname, url_parent, url_relative,
 };

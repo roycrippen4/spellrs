@@ -13,3 +13,4 @@ license.workspace = true
 [dependencies]
 url = "2.5.4"
 once_cell = "1.20.2"
+regex = "1.11.1"
