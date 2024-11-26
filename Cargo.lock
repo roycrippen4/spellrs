@@ -272,6 +272,7 @@ name = "spellrs"
 version = "0.1.0"
 dependencies = [
  "spellrs_filetype",
+ "spellrs_url",
 ]
 
 [[package]]
@@ -287,6 +288,7 @@ name = "spellrs_url"
 version = "0.1.0"
 dependencies = [
  "once_cell",
+ "regex",
  "url",
 ]
 

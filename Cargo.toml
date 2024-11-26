@@ -30,3 +30,4 @@ include = [
 
 [dependencies]
 spellrs_filetype = { path = "./spellrs_filetype" }
+spellrs_url = { path = "./spellrs_url" }
