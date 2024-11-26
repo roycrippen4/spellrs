@@ -66,3 +66,7 @@ dependencies = [
  "once_cell",
  "regex",
 ]
+
+[[package]]
+name = "spellrs_url"
+version = "0.1.0"

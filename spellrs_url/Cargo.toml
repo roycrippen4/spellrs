@@ -1,0 +1,13 @@
+[package]
+name = "spellrs_url"
+version = "0.1.0"
+description = "A URL parsing and manipulation library for spellrs"
+keywords = ["spellrs", "url"]
+authors.workspace = true
+edition.workspace = true
+include.workspace = true
+repository.workspace = true
+license.workspace = true
+
+
+[dependencies]
