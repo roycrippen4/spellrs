@@ -6,7 +6,7 @@ static SCHEME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z][a-zA-Z0-9
 
 /// A trait for determining if a value is URL-like.
 ///
-/// This trait is implemented for `String` and `Url`, enabling the use of the
+/// This trait is implemented for `String`, `Url` and '&str', enabling the use of the
 /// `is_url_like` function to check whether a value represents a URL or resembles one.
 ///
 /// # Examples

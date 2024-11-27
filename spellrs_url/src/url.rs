@@ -8,7 +8,7 @@ use url::{ParseError, Url};
 #[allow(unused)]
 static IS_URL_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?i)^(\w[\w-]{1,63}:/|data:|stdin:)").unwrap());
-pub static REGEX_WINDOWS_PATH: Lazy<Regex> =
+pub static RE_WINDOWS_PATH: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?<path>^[\\/][a-zA-Z]:[\\/])").unwrap());
 #[allow(unused)]
 pub static REGEX_ENCODED_COLON: Lazy<Regex> = Lazy::new(|| Regex::new(r"%3[aA]").unwrap());

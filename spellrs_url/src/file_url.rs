@@ -53,11 +53,11 @@ pub fn file_url_to_path(file_url: &str) -> Result<PathBuf, String> {
 }
 
 // Define a static lazy regex
-pub static REGEX_WINDOWS_PATH_DRIVE_LETTER: Lazy<Regex> =
+pub static RE_WINDOWS_PATH_DRIVE_LETTER: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^([a-zA-Z]):[\\/]").expect("Failed to compile regex"));
 
 pub fn path_windows_drive_letter_to_upper(abs_file_path: &str) -> String {
-    REGEX_WINDOWS_PATH_DRIVE_LETTER
+    RE_WINDOWS_PATH_DRIVE_LETTER
         .replace(abs_file_path, |caps: &regex::Captures| {
             format!("{}:", &caps[1].to_uppercase())
         })
