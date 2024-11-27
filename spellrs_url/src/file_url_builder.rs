@@ -1,5 +1,5 @@
 #![allow(unused)]
-use std::{env::consts, error::Error};
+use std::{env::consts, error::Error, slice::Windows};
 
 use crate::{
     add_trailing_slash, file_url_to_path, is_url_like, normalize_windows_url,
@@ -27,72 +27,61 @@ pub struct ParsedPath {
     pub name: String,
 }
 
-pub trait PathInterface {
-    fn sep(&self) -> &str;
-    fn resolve(&self, paths: &[&str]) -> String;
-    fn parse(&self, path: &str) -> ParsedPath;
-    fn normalize(&self, path: &str) -> String;
-    fn relative(&self, from: &str, to: &str) -> String;
-    fn is_absolute(&self, path: &str) -> bool;
-}
-
-pub struct BuilderOptions {
-    windows: Option<bool>,
-    path: Option<Box<dyn PathInterface>>,
-    cwd: Option<Url>,
-}
-
 pub struct FileUrlBuilder {
     windows: bool,
-    path: Box<dyn PathInterface>,
     cwd: Url,
 }
 
 impl FileUrlBuilder {
-    pub fn new(options: BuilderOptions) -> Result<Self, Box<dyn Error>> {
-        todo!()
+    pub fn new(windows: Option<bool>, cwd: Option<Url>) -> Self {
+        let is_windows = windows.unwrap_or(cfg!(windows));
+        let cwd = cwd.unwrap_or_else(|| {
+            let default_cwd = std::env::current_dir().expect("Failed to get cwd");
+            Url::from_directory_path(default_cwd).expect("Failed to create Url from cwd")
+        });
+
+        Self {
+            windows: is_windows,
+            cwd,
+        }
     }
 
     pub fn encode_path_chars(&self, filepath: &str) -> String {
-        let mut filepath = RE_PERCENT.replace_all(filepath, "%25").to_string();
-
-        if !self.windows && consts::OS != "windows" && filepath.contains("\\") {
-            filepath = RE_BACKSLASH.replace_all(&filepath, "%5C").to_string();
-        }
-
-        filepath = RE_NEWLINE.replace_all(&filepath, "%0A").to_string();
-        filepath = RE_CARRIAGE_RETURN.replace_all(&filepath, "%0D").to_string();
-        RE_TAB.replace_all(&filepath, "%09").to_string()
+        filepath
+            .replace('%', "%25")
+            .replace('\\', if self.windows { "%5C" } else { "\\" })
+            .replace('\n', "%0A")
+            .replace('\r', "%0D")
+            .replace('\t', "%09")
     }
 
     pub fn normalize_filepath_for_url(&self, filepath: &str) -> String {
-        let mut filepath = self.encode_path_chars(filepath);
-        filepath = RE_QUESTION.replace_all(&filepath, "%3F").to_string();
-        filepath = RE_HASH.replace_all(&filepath, "%23").to_string();
-        let pathname = filepath.replace("\\", "/");
+        let encoded = self.encode_path_chars(filepath);
+        if self.windows {
+            encoded.replace('\\', "/")
+        } else {
+            encoded.to_string()
+        }
+    }
 
-        RE_WINDOWS_PATH
-            .replace(&pathname, |caps: &regex::Captures| {
-                format!("/{}", &caps[0].to_uppercase())
-            })
-            .to_string()
+    fn path_to_file_url(&self, pathname: &str) -> Url {
+        let normalized_path = self.normalize_filepath_for_url(pathname);
+        self.cwd.join(&normalized_path).expect("Invalid URL")
     }
 
     pub fn to_file_url() -> Url {
         todo!()
     }
 
-    fn _to_file_url(filename_or_url: impl Into<String>) -> Url {
-        todo!()
-    }
+    // fn _to_file_url(filename_or_url: impl Into<String>) -> Url {}
 
     fn get_fs_root_url(&self) {
         todo!()
     }
 
-    pub fn is_absolute(&self, filepath: &str) -> bool {
-        is_url_like(filepath) || self.path.is_absolute(filepath)
-    }
+    // pub fn is_absolute(&self, filepath: &str) -> bool {
+    //     is_url_like(filepath) || self.path.is_absolute(filepath)
+    // }
 
     pub fn is_url_like(url: impl IsUrlLike) -> bool {
         is_url_like(url)

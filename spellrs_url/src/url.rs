@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use crate::traits::*;
+use crate::{traits::*, StUrl};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use url::{ParseError, Url};
@@ -22,14 +22,16 @@ pub static REGEX_ENCODED_COLON: Lazy<Regex> = Lazy::new(|| Regex::new(r"%3[aA]")
 ///
 /// # Returns
 /// A normalized `Url`.
-pub fn to_url(url: impl Into<String>, relative_to: Option<String>) -> Result<Url, ParseError> {
-    normalize_windows_url(match relative_to {
-        Some(base) => Url::parse(&base)?.join(&url.into())?,
-        None => Url::parse(&url.into())?,
-    })
+pub fn to_url(url: &StUrl, relative_to: Option<&StUrl>) -> Result<Url, ParseError> {
+    let url = match relative_to {
+        Some(base) => base.as_url()?.join(url.as_str())?,
+        None => url.as_url()?,
+    };
+
+    normalize_windows_url(&url.into())
 }
 
-pub fn url_parent(url: impl Into<String>) -> Result<Url, ParseError> {
+pub fn url_parent(url: &StUrl) -> Result<Url, ParseError> {
     let url = to_url(url, None)?;
     if url.scheme() == "data" {
         return Ok(url);
@@ -143,39 +145,41 @@ pub fn is_url_like(filename: impl IsUrlLike) -> bool {
 ///
 /// Basic usage:
 /// ```
-/// use spellrs_url::has_protocol;
+/// use spellrs_url::{has_protocol, StUrl};
 ///
-/// assert!(has_protocol("https://example.com", "https")); // True: URL has "https" protocol
-/// assert!(!has_protocol("https://example.com", "file")); // False: URL does not have "file" protocol
-/// assert!(has_protocol("file://path/to/file", "file")); // True: URL has "file" protocol
+/// assert!(has_protocol(&StUrl::Str("https://example.com"), "https")); // True: URL has "https" protocol
+/// assert!(!has_protocol(&StUrl::Str("https://example.com"), "file")); // False: URL does not have "file" protocol
+/// assert!(has_protocol(&StUrl::Str("file://path/to/file"), "file")); // True: URL has "file" protocol
 /// ```
 ///
 /// Handling URLs with or without trailing colons in the scheme:
 /// ```
-/// use spellrs_url::has_protocol;
+/// use spellrs_url::{has_protocol, StUrl};
 ///
-/// assert!(has_protocol("https://example.com", "https:")); // True
-/// assert!(has_protocol("https://example.com", "https")); // True
-/// assert!(!has_protocol("https://example.com", "http")); // False
-/// assert!(has_protocol("http://example.com", "http:")); // True
+/// assert!(has_protocol(&StUrl::Str("https://example.com"), "https:")); // True
+/// assert!(has_protocol(&StUrl::Str("https://example.com"), "https")); // True
+/// assert!(!has_protocol(&StUrl::Str("https://example.com"), "http")); // False
+/// assert!(has_protocol(&StUrl::Str("http://example.com"), "http:")); // True
 /// ```
 ///
 /// Invalid URLs:
 /// ```
-/// use spellrs_url::has_protocol;
+/// use spellrs_url::{has_protocol, StUrl};
 ///
-/// assert!(!has_protocol("invalid-url", "http")); // False: URL parsing fails
-/// assert!(!has_protocol("", "http")); // False: Empty string cannot have a protocol
+/// let invalid_url: StUrl = "invalid-url".into();
+/// assert!(!has_protocol(&invalid_url, "http")); // False: URL parsing fails
+/// let empty_url: StUrl = "".into();
+/// assert!(!has_protocol(&empty_url, "http")); // False: Empty string cannot have a protocol
 /// ```
 ///
 /// Custom protocols:
 /// ```
-/// use spellrs_url::has_protocol;
+/// use spellrs_url::{has_protocol, StUrl};
 ///
-/// assert!(has_protocol("custom-protocol://example", "custom-protocol")); // True
-/// assert!(!has_protocol("custom-protocol://example", "https")); // False
+/// assert!(has_protocol(&StUrl::Str("custom-protocol://example"), "custom-protocol")); // True
+/// assert!(!has_protocol(&StUrl::Str("custom-protocol://example"), "https")); // False
 /// ```
-pub fn has_protocol(url: impl Into<String>, scheme: &str) -> bool {
+pub fn has_protocol(url: &StUrl, scheme: &str) -> bool {
     // Ensure the scheme ends with ':'
     let scheme = if scheme.ends_with(':') {
         scheme.to_string()
@@ -185,10 +189,10 @@ pub fn has_protocol(url: impl Into<String>, scheme: &str) -> bool {
         new_scheme
     };
 
-    // Parse the URL and check its scheme
-    match Url::parse(&url.into()) {
-        Ok(parsed_url) => parsed_url.scheme() == scheme.trim_end_matches(':'),
-        Err(_) => false,
+    match url {
+        StUrl::Str(s) => s.starts_with(&scheme),
+        StUrl::String(s) => s.starts_with(&scheme),
+        StUrl::Url(url) => url.scheme() == "file",
     }
 }
 
@@ -331,11 +335,11 @@ pub fn is_url(value: &dyn Any) -> bool {
     value.is::<Url>()
 }
 
-pub fn url_dirname(url: impl Into<String>) -> Result<Url, ParseError> {
+pub fn url_dirname(url: &StUrl) -> Result<Url, ParseError> {
     url_parent(url)
 }
 
-pub fn url_relative(from: impl Into<String>, to: impl Into<String>) -> Result<String, ParseError> {
+pub fn url_relative(from: &StUrl, to: &StUrl) -> Result<String, ParseError> {
     let from = &to_url(from, None)?;
     let to = &to_url(to, None)?;
     Ok(url_to_url_relative(from, to))
@@ -383,9 +387,9 @@ pub fn url_to_url_relative(url_from: &Url, url_to: &Url) -> String {
     }
 }
 
-/// Ensure that a windows file url is correctly formatted with a capitol letter for the drive
-pub fn normalize_windows_url(input: impl Into<String>) -> Result<Url, url::ParseError> {
-    let mut url = Url::parse(&input.into())?;
+/// Ensure that a windows file url is correctly formatted with a capital letter for the drive
+pub fn normalize_windows_url(url: &StUrl) -> Result<Url, url::ParseError> {
+    let mut url = url.as_url()?;
 
     if url.scheme() == "file" {
         let decoded_path = url.path().replace("%3A", ":").replace("%3a", ":");
@@ -493,14 +497,17 @@ mod test {
         ];
 
         for (url, root, expected) in cases {
-            let result = to_url(url, root);
+            let url: StUrl = url.into();
+            let root = root.map(StUrl::String);
+
+            let result = to_url(&url, root.as_ref());
             let expected = Url::parse(expected);
             assert_eq!(expected, result);
         }
 
         assert_eq!(
             to_url(
-                Url::parse("https://github.com/streetsidesoftware/cspell/README.md").unwrap(),
+                &StUrl::Str("https://github.com/streetsidesoftware/cspell/README.md"),
                 None,
             ),
             Url::parse("https://github.com/streetsidesoftware/cspell/README.md")
@@ -549,7 +556,8 @@ mod test {
         ];
 
         for (url, expected) in cases {
-            let result = url_parent(url).unwrap().to_string();
+            let url: StUrl = url.into();
+            let result = url_parent(&url).unwrap().to_string();
             let expected = Url::parse(expected).unwrap().to_string();
             assert_eq!(expected, result)
         }
@@ -576,7 +584,8 @@ mod test {
 
         for (url, expected) in cases {
             let expected = Url::parse(expected).unwrap();
-            let result = add_trailing_slash(to_url(url, None).unwrap());
+            let url: StUrl = url.into();
+            let result = add_trailing_slash(to_url(&url, None).unwrap());
             assert_eq!(expected, result);
         }
     }
@@ -614,14 +623,20 @@ mod test {
         ];
 
         for (from, to, expected) in cases {
-            assert_eq!(&url_relative(from, to).unwrap(), expected);
+            let from: StUrl = from.into();
+            let to: StUrl = to.into();
+            assert_eq!(&url_relative(&from, &to).unwrap(), expected);
 
-            let rel = url_relative(to_url(from, None).unwrap(), to_url(to, None).unwrap()).unwrap();
+            let rel = url_relative(
+                &to_url(&from, None).unwrap().into(),
+                &to_url(&to, None).unwrap().into(),
+            )
+            .unwrap();
             assert_eq!(rel, expected);
 
-            if to_url(from, None).unwrap().path().starts_with('/') {
-                let result = Url::parse(from).unwrap().join(&rel).unwrap();
-                let expected = Url::parse(to).unwrap();
+            if to_url(&from, None).unwrap().path().starts_with('/') {
+                let result = from.as_url().unwrap().join(&rel).unwrap();
+                let expected = to.as_url().unwrap();
                 assert_eq!(expected, result)
             }
         }
@@ -684,8 +699,8 @@ mod test {
         ];
 
         for (url, expected) in cases {
-            let url = Url::parse(url).unwrap();
-            assert_eq!(normalize_windows_url(url).unwrap().as_str(), expected);
+            let url = StUrl::Str(url);
+            assert_eq!(normalize_windows_url(&url).unwrap().as_str(), expected);
         }
     }
 }

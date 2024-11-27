@@ -1,11 +1,11 @@
-use crate::{basename_of_url_pathname, has_protocol, to_url};
+use crate::{basename_of_url_pathname, has_protocol, to_url, StUrl};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
 static REG_MATCH_FILENAME: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"filename=([^;,]*)").expect("Invalid regex pattern"));
 
-pub fn url_basename(url: impl Into<String>) -> String {
+pub fn url_basename(url: &StUrl) -> String {
     fn guess_data_url_name(header: &str) -> String {
         if let Some(f_matches) = REG_MATCH_FILENAME.captures(header) {
             return f_matches.get(1).map(|m| m.as_str()).unwrap().to_string();
@@ -26,6 +26,6 @@ pub fn url_basename(url: impl Into<String>) -> String {
     basename_of_url_pathname(url.path()).to_string()
 }
 
-pub fn is_data_url(url: impl Into<String>) -> bool {
+pub fn is_data_url(url: &StUrl) -> bool {
     has_protocol(url, "data:")
 }

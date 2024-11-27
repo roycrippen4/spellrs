@@ -4,22 +4,21 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use url::Url;
 
-use crate::{decode_uri_component, has_protocol};
+use crate::{decode_uri_component, has_protocol, StUrl};
 
 /// Returns true if the Url is a file Url.
-pub fn is_file_url(url: impl Into<String>) -> bool {
+pub fn is_file_url(url: &StUrl) -> bool {
     has_protocol(url, "file:")
 }
 
-pub fn to_file_path_or_href(url: impl Into<String>) -> String {
-    let url = Url::parse(&url.into()).unwrap();
-    match is_file_url(url.clone()) {
-        true => to_file_path(&url),
-        false => url.path().into(),
+pub fn to_file_path_or_href(url: &StUrl) -> String {
+    match is_file_url(url) {
+        true => to_file_path(url),
+        false => url.to_string(),
     }
 }
 
-fn to_file_path(url: &Url) -> String {
+fn to_file_path(url: &StUrl) -> String {
     let url_path = file_url_to_path(url.as_str()).unwrap();
     path_windows_drive_letter_to_upper(&url_path.as_os_str().to_string_lossy())
 }
