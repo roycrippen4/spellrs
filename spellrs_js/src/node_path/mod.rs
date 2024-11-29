@@ -9,8 +9,23 @@ pub use windows::Windows;
 
 #[derive(Debug)]
 pub struct NodePath {
-    win32: Windows,
-    posix: Posix,
+    pub win32: Windows,
+    pub posix: Posix,
+}
+
+impl NodePath {
+    pub fn new() -> Self {
+        Self {
+            win32: Windows,
+            posix: Posix,
+        }
+    }
+}
+
+impl Default for NodePath {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PathInterface for NodePath {

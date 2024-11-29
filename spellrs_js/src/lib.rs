@@ -1,3 +1,4 @@
+pub mod globals;
 mod js;
 mod node_path;
 

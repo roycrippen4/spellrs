@@ -19,9 +19,9 @@ pub use file_url::{
 pub use file_url_builder::FileUrlBuilder;
 pub use traits::*;
 pub use url::{
-    add_trailing_slash, basename_of_url_pathname, decode_uri_component, has_protocol,
-    is_not_url_like, is_url, is_url_like, normalize_windows_url, to_url, url_dirname, url_parent,
-    url_relative, url_to_url_relative, RE_WINDOWS_PATH,
+    add_trailing_slash, basename_of_url_pathname, has_protocol, is_not_url_like, is_url,
+    is_url_like, normalize_windows_url, to_url, url_dirname, url_parent, url_relative,
+    url_to_url_relative, RE_WINDOWS_PATH,
 };
 
 /// Many functions from this port accept strings or Urls as parameters.

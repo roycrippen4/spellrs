@@ -2,9 +2,10 @@ use std::path::{Path, PathBuf};
 
 use once_cell::sync::Lazy;
 use regex::Regex;
+use spellrs_js::globals::decode_uri_component;
 use url::Url;
 
-use crate::{decode_uri_component, has_protocol, StUrl};
+use crate::{has_protocol, StUrl};
 
 /// Returns true if the Url is a file Url.
 pub fn is_file_url(url: &StUrl) -> bool {
