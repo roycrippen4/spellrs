@@ -1,5 +1,5 @@
 mod js;
-mod path;
+mod node_path;
 
 pub use js::JS;
-pub use path::{DefaultPath, ParsedPath, PathInterface, Posix, Windows};
+pub use node_path::{NodePath, ParsedPath, PathInterface, Posix, Windows};

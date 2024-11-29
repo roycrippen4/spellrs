@@ -34,11 +34,11 @@ fn posix_cwd() -> String {
 pub struct Posix;
 
 impl PathInterface for Posix {
-    fn sep() -> &'static str {
+    fn sep(&self) -> &'static str {
         "/"
     }
 
-    fn parse(path: &str) -> ParsedPath {
+    fn parse(&self, path: &str) -> ParsedPath {
         let mut ret = ParsedPath {
             dir: "".to_string(),
             root: "".to_string(),
@@ -92,7 +92,7 @@ impl PathInterface for Posix {
         ret
     }
 
-    fn resolve(paths: &[&str]) -> String {
+    fn resolve(&self, paths: &[&str]) -> String {
         if paths.len() == 1 && paths[0].is_empty() {
             return posix_cwd();
         }
@@ -136,7 +136,7 @@ impl PathInterface for Posix {
         }
     }
 
-    fn normalize(path: &str) -> String {
+    fn normalize(&self, path: &str) -> String {
         if path.is_empty() {
             return ".".to_string();
         }
@@ -166,13 +166,13 @@ impl PathInterface for Posix {
         }
     }
 
-    fn relative(from: &str, to: &str) -> String {
+    fn relative(&self, from: &str, to: &str) -> String {
         if from == to {
             return "".to_string();
         }
 
-        let from = Posix::resolve(&[from]);
-        let to = Posix::resolve(&[to]);
+        let from = Posix.resolve(&[from]);
+        let to = Posix.resolve(&[to]);
 
         if from == to {
             return "".to_string();
@@ -280,7 +280,7 @@ impl PathInterface for Posix {
         to.slice(to_start as isize, to.len() as isize)
     }
 
-    fn is_absolute(path: &str) -> bool {
+    fn is_absolute(&self, path: &str) -> bool {
         !path.is_empty() && path.starts_with('/')
     }
 }
@@ -316,7 +316,7 @@ mod test {
         ];
 
         for (i, (path, expected)) in cases.iter().enumerate() {
-            let result = Posix::normalize(path);
+            let result = Posix.normalize(path);
             assert_eq!(
                 &result, expected,
                 "\n\nPATH {i} FAILED\ninput:    {path}\nresult  : {:?}\nexpected: {:?}\n\n",
@@ -330,7 +330,7 @@ mod test {
         let cases = get_parse_cases();
 
         for (i, (path, expected)) in cases.iter().enumerate() {
-            let result = Posix::parse(path);
+            let result = Posix.parse(path);
             assert_eq!(
                 &result, expected,
                 "\n\nPATH {i} FAILED\ninput:    {path}\nresult  : {:?}\nexpected: {:?}\n\n",
@@ -374,7 +374,7 @@ mod test {
         ];
 
         for (i, (paths, expected)) in cases.iter().enumerate() {
-            let result = Posix::resolve(paths);
+            let result = Posix.resolve(paths);
             assert_eq!(
                 &result, expected,
                 "\n\nCASE {i} FAILED\nPATHS    : \"{:?}\"\nresult  : {:?}\nexpected: {:?}\n\n",
@@ -414,7 +414,7 @@ mod test {
         ];
 
         for (i, ((from, to), expected)) in cases.iter().enumerate() {
-            let result = Posix::relative(from, to);
+            let result = Posix.relative(from, to);
             assert_eq!(
                 &result, expected,
                 "\n\nCASE {i} FAILED\nFROM    : \"{from}\"\nTO      : \"{to}\"\nresult  : {:?}\nexpected: {:?}\n\n",

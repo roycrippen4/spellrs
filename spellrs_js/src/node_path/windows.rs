@@ -27,11 +27,11 @@ fn is_windows_device_root(code: u32) -> bool {
 pub struct Windows;
 
 impl PathInterface for Windows {
-    fn sep() -> &'static str {
+    fn sep(&self) -> &'static str {
         r"\"
     }
 
-    fn parse(path: &str) -> ParsedPath {
+    fn parse(&self, path: &str) -> ParsedPath {
         let mut ret = ParsedPath {
             dir: "".to_string(),
             root: "".to_string(),
@@ -181,7 +181,7 @@ impl PathInterface for Windows {
         ret
     }
 
-    fn resolve(paths: &[&str]) -> String {
+    fn resolve(&self, paths: &[&str]) -> String {
         let mut resolved_device = "".to_string();
         let mut resolved_tail = "".to_string();
         let mut resolved_absolute = false;
@@ -324,7 +324,7 @@ impl PathInterface for Windows {
         }
     }
 
-    fn normalize(path: &str) -> String {
+    fn normalize(&self, path: &str) -> String {
         let len = path.len();
         if len == 0 {
             return ".".to_string();
@@ -425,9 +425,9 @@ impl PathInterface for Windows {
         }
     }
 
-    fn relative(from: &str, to: &str) -> String {
-        let from_orig = Windows::resolve(&[from]);
-        let to_orig = Windows::resolve(&[to]);
+    fn relative(&self, from: &str, to: &str) -> String {
+        let from_orig = Windows.resolve(&[from]);
+        let to_orig = Windows.resolve(&[to]);
 
         if from_orig == to_orig {
             return "".to_string();
@@ -539,7 +539,7 @@ impl PathInterface for Windows {
         to_orig.slice(to_start as isize, to_end as isize)
     }
 
-    fn is_absolute(path: &str) -> bool {
+    fn is_absolute(&self, path: &str) -> bool {
         let len = path.len();
 
         if path.is_empty() {
@@ -570,8 +570,8 @@ mod test {
 
     #[test]
     fn test_windows_is_absolute() {
-        assert!(Windows::is_absolute("C:\\foo\\bar"));
-        assert!(!Windows::is_absolute("..\\baz"));
+        assert!(Windows.is_absolute("C:\\foo\\bar"));
+        assert!(!Windows.is_absolute("..\\baz"));
     }
 
     #[test]
@@ -590,7 +590,7 @@ mod test {
         ];
 
         for (i, (path, expected)) in cases.iter().enumerate() {
-            let result = Windows::normalize(path);
+            let result = Windows.normalize(path);
             assert_eq!(
                 &result, expected,
                 "\n\nPATH {i} FAILED\ninput:    {path}\nresult  : {:?}\nexpected: {:?}\n\n",
@@ -601,7 +601,7 @@ mod test {
 
     #[test]
     fn test_windows_parse() {
-        let parsed = Windows::parse("\\\\server\\share");
+        let parsed = Windows.parse("\\\\server\\share");
         let expected = ParsedPath {
             base: "\\".into(),
             dir: "\\\\server\\share".into(),
@@ -629,7 +629,7 @@ mod test {
         ];
 
         for (i, (paths, expected)) in test_cases.iter().enumerate() {
-            let result = Windows::resolve(paths);
+            let result = Windows.resolve(paths);
             assert_eq!(
                 &result, expected,
                 "\n\nCASE {i} FAILED\nPATHS    : \"{:?}\"\nresult  : {:?}\nexpected: {:?}\n\n",
@@ -669,7 +669,7 @@ mod test {
         ];
 
         for (i, ((from, to), expected)) in cases.iter().enumerate() {
-            let result = Windows::relative(from, to);
+            let result = Windows.relative(from, to);
             assert_eq!(
                 &result, expected,
                 "\n\nCASE {i} FAILED\nFROM    : \"{from}\"\nTO      : \"{to}\"\nresult  : {:?}\nexpected: {:?}\n\n",
