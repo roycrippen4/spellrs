@@ -1,4 +1,4 @@
 # `spellrs_js`
 
-Utilities for adding compatibility to `&str` and `String` types with javascript `string.prototype` methods.
+Trait `JS` that adds javascript `string.prototype` methods to `&str` and `String`.
 Also includes a partial implementation of the `Nodejs` path module.
