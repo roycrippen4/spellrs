@@ -2,13 +2,14 @@ mod _common;
 mod posix;
 mod windows;
 
-use std::env;
+use std::{env, fmt::Debug};
 
 pub use posix::Posix;
 pub use windows::Windows;
 
 /// If `std::env::consts::OS` resolves to "windows", then the windows implementation is used.
 /// Otherwise, the posix implementation is used.
+#[derive(Debug)]
 pub struct DefaultPath;
 
 impl PathInterface for DefaultPath {
@@ -64,7 +65,7 @@ pub struct ParsedPath {
     pub ext: String,
 }
 
-pub trait PathInterface {
+pub trait PathInterface: Debug {
     fn sep() -> &'static str;
     fn resolve(paths: &[&str]) -> String;
     fn parse(path: &str) -> ParsedPath;

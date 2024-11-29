@@ -23,6 +23,7 @@ fn is_windows_device_root(code: u32) -> bool {
 }
 
 /// Windows implementation of the NodeJS path module
+#[derive(Debug)]
 pub struct Windows;
 
 impl PathInterface for Windows {

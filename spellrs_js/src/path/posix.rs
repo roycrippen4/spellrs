@@ -30,6 +30,7 @@ fn posix_cwd() -> String {
 }
 
 /// Posix implementation of the NodeJS path module
+#[derive(Debug)]
 pub struct Posix;
 
 impl PathInterface for Posix {
