@@ -2,12 +2,9 @@ use std::env;
 
 use super::{
     ParsedPath, PathInterface,
-    _common::{
-        constants::CHAR_FORWARD_SLASH,
-        normalize_string::normalize_string,
-        util::{char_code_at, js_slice},
-    },
+    _common::{constants::CHAR_FORWARD_SLASH, normalize_string::normalize_string},
 };
+use crate::JS;
 
 fn is_posix_path_separator(code: u32) -> bool {
     code == CHAR_FORWARD_SLASH
@@ -48,7 +45,7 @@ impl PathInterface for Posix {
     /// # Examples
     ///
     /// ```
-    /// use spellrs_url::path::parse;
+    /// use spellrs_js::path::parse;
     ///
     /// // Example for Windows
     /// #[cfg(windows)]
@@ -109,16 +106,14 @@ impl PathInterface for Posix {
 
         if let Some(index) = last_slash_index {
             if index > 0 || is_absolute {
-                ret.dir = escape_special_chars(js_slice(trimmed_path, 0, index as isize));
+                ret.dir = escape_special_chars(trimmed_path.slice(0, index as isize));
             }
 
-            ret.base = escape_special_chars(js_slice(
-                trimmed_path,
-                index as isize + 1,
-                trimmed_path.len() as isize,
-            ));
+            ret.base = escape_special_chars(
+                trimmed_path.slice(index as isize + 1, trimmed_path.len() as isize),
+            );
         } else {
-            ret.base = escape_special_chars(trimmed_path.to_string());
+            ret.base = escape_special_chars(trimmed_path);
         }
 
         if ret.base == ".." || ret.base == "." {
@@ -127,8 +122,8 @@ impl PathInterface for Posix {
             if dot_index == 0 {
                 ret.name = ret.base.clone();
             } else {
-                ret.name = escape_special_chars(js_slice(&ret.base, 0, dot_index as isize));
-                ret.ext = js_slice(&ret.base, dot_index as isize, ret.base.len() as isize);
+                ret.name = escape_special_chars(&ret.base.slice(0, dot_index as isize));
+                ret.ext = ret.base.slice(dot_index as isize, ret.base.len() as isize);
             }
         } else {
             ret.name = ret.base.clone();
@@ -157,7 +152,7 @@ impl PathInterface for Posix {
             }
 
             resolved_path = format!("{path}/{resolved_path}");
-            resolved_absolute = char_code_at(path, 0) == CHAR_FORWARD_SLASH as i32;
+            resolved_absolute = path.char_code_at(0) == CHAR_FORWARD_SLASH as i32;
 
             i -= 1;
         }
@@ -165,7 +160,7 @@ impl PathInterface for Posix {
         if !resolved_absolute {
             let cwd = posix_cwd();
             resolved_path = format!("{cwd}/{resolved_path}");
-            resolved_absolute = char_code_at(&cwd, 0) == CHAR_FORWARD_SLASH as i32;
+            resolved_absolute = cwd.char_code_at(0) == CHAR_FORWARD_SLASH as i32;
         }
 
         resolved_path = normalize_string(
@@ -231,7 +226,7 @@ impl PathInterface for Posix {
         let from_end = from.len();
 
         while from_start < from_end {
-            if !is_posix_path_separator(char_code_at(&to, from_start) as u32) {
+            if !is_posix_path_separator(to.char_code_at(from_start) as u32) {
                 break;
             }
             from_start += 1;
@@ -242,7 +237,7 @@ impl PathInterface for Posix {
         let mut to_start = 1;
         let to_end = to.len();
         while to_start < to_end {
-            if !is_posix_path_separator(char_code_at(&to, to_start) as u32) {
+            if !is_posix_path_separator(to.char_code_at(to_start) as u32) {
                 break;
             }
             to_start += 1;
@@ -256,17 +251,17 @@ impl PathInterface for Posix {
         while i <= length {
             if i == length {
                 if to_len > length {
-                    if is_posix_path_separator(char_code_at(&to, to_start + i) as u32) {
+                    if is_posix_path_separator(to.char_code_at(to_start + i) as u32) {
                         // We get here if `from` is the exact base path for `to`.
                         // For example: from='/foo/bar'; to='/foo/bar/baz'
-                        return js_slice(&to, (to_start + i) as isize + 1, to.len() as isize);
+                        return to.slice((to_start + i) as isize + 1, to.len() as isize);
                     } else if i == 0 {
                         // We get here if `from` is the root
                         // For example: from='/'; to='/foo'
-                        return js_slice(&to, (to_start + i) as isize, to.len() as isize);
+                        return to.slice((to_start + i) as isize, to.len() as isize);
                     }
                 } else if from_len > length {
-                    if is_posix_path_separator(char_code_at(&from, from_start + i) as u32) {
+                    if is_posix_path_separator(to.char_code_at(from_start + i) as u32) {
                         // We get here if `to` is the exact base path for `from`.
                         // For example: from='/foo/bar/baz'; to='/foo/bar'
                         last_common_sep = Some(i);
@@ -278,8 +273,8 @@ impl PathInterface for Posix {
                 }
                 break;
             }
-            let from_code = char_code_at(&from, from_start + i);
-            let to_code = char_code_at(&to, to_start + i);
+            let from_code = from.char_code_at(from_start + i);
+            let to_code = from.char_code_at(to_start + i);
 
             if from_code != to_code {
                 break;
@@ -298,7 +293,7 @@ impl PathInterface for Posix {
             None => from_start,
         };
         while i <= from_end {
-            if i == from_end || is_posix_path_separator(char_code_at(&from, i) as u32) {
+            if i == from_end || is_posix_path_separator(from.char_code_at(i) as u32) {
                 if out.is_empty() {
                     out += "..";
                 } else {
@@ -313,7 +308,7 @@ impl PathInterface for Posix {
                 Some(last_common_sep) => to_start + last_common_sep,
                 None => to_start - 1,
             };
-            let slice = js_slice(&to, start_idx as isize, to.len() as isize);
+            let slice = to.slice(start_idx as isize, to.len() as isize);
             return out + &slice;
         }
 
@@ -322,11 +317,11 @@ impl PathInterface for Posix {
             None => to_start - 1,
         };
 
-        if is_posix_path_separator(char_code_at(&to, to_start) as u32) {
+        if is_posix_path_separator(to.char_code_at(to_start) as u32) {
             to_start += 1;
         }
 
-        js_slice(&to, to_start as isize, to.len() as isize)
+        to.slice(to_start as isize, to.len() as isize)
     }
 
     fn is_absolute(path: &str) -> bool {
@@ -334,7 +329,7 @@ impl PathInterface for Posix {
     }
 }
 
-fn escape_special_chars(input: String) -> String {
+fn escape_special_chars(input: &str) -> String {
     // handle null terminated bytes
     if input.contains(r"\0") {
         return input.replace(r"\0", r"\u0000");
@@ -344,7 +339,7 @@ fn escape_special_chars(input: String) -> String {
         return input.replace("\\", "\\\\");
     }
 
-    input
+    input.to_string()
 }
 
 #[cfg(test)]

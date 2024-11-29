@@ -1,7 +1,5 @@
-use super::{
-    constants::{CHAR_DOT, CHAR_FORWARD_SLASH},
-    util::{char_code_at, js_slice},
-};
+use super::constants::{CHAR_DOT, CHAR_FORWARD_SLASH};
+use crate::JS;
 
 pub fn normalize_string(
     path: &str,
@@ -17,7 +15,7 @@ pub fn normalize_string(
 
     for i in 0..=path.len() {
         if i < path.len() {
-            code = Some(char_code_at(path, i))
+            code = Some(path.char_code_at(i))
         } else if code.is_some_and(|c| is_path_separator(c as u32)) {
             break;
         } else {
@@ -30,13 +28,13 @@ pub fn normalize_string(
             } else if last_slash != i as isize - 1 && dots == 2 {
                 if res.len() < 2
                     || last_segment_length != 2
-                    || char_code_at(&res, res.len() - 1) != CHAR_DOT as i32
-                    || char_code_at(&res, res.len() - 2) != CHAR_DOT as i32
+                    || res.char_code_at(res.len() - 1) != CHAR_DOT as i32
+                    || res.char_code_at(res.len() - 2) != CHAR_DOT as i32
                 {
                     if res.len() > 2 {
                         let last_slash_idx = res.rfind(separator);
                         if let Some(last_slash_idx) = last_slash_idx {
-                            res = js_slice(&res, 0, last_slash_idx as isize);
+                            res = res.slice(0, last_slash_idx as isize);
                             last_segment_length = res.len() as isize
                                 - 1
                                 - res.rfind(separator).map(|i| i as isize).unwrap_or(-1)
@@ -67,12 +65,11 @@ pub fn normalize_string(
                 }
             } else {
                 if !res.is_empty() {
-                    let slice = js_slice(path, last_slash + 1, i as isize);
+                    let slice = path.slice(last_slash + 1, i as isize);
                     let new_res = format!("{res}{separator}{slice}");
                     res = new_res;
                 } else {
-                    let slice = js_slice(path, last_slash + 1, i as isize);
-                    res = slice;
+                    res = path.slice(last_slash + 1, i as isize).to_string();
                 }
                 last_segment_length = i as isize - last_slash - 1;
             }

@@ -10,9 +10,10 @@ use super::{
             CHAR_LOWERCASE_Z, CHAR_UPPERCASE_A, CHAR_UPPERCASE_Z,
         },
         normalize_string::normalize_string,
-        util::{char_code_at, js_slice},
     },
 };
+
+use crate::JS;
 
 fn is_posix_path_separator(code: u32) -> bool {
     code == CHAR_FORWARD_SLASH
@@ -70,17 +71,17 @@ impl PathInterface for Windows {
         }
 
         let mut root_end: isize = 0;
-        let mut code = char_code_at(path, 0);
+        let mut code = path.char_code_at(0);
 
         if len > 1 {
             if is_path_separator(code as u32) {
                 root_end = 1;
-                if is_path_separator(char_code_at(path, 1) as u32) {
+                if is_path_separator(path.char_code_at(1) as u32) {
                     let mut j: isize = 2;
                     let mut last = j;
 
                     while j < len {
-                        if is_path_separator(char_code_at(path, j as usize) as u32) {
+                        if is_path_separator(path.char_code_at(j as usize) as u32) {
                             break;
                         }
                         j += 1;
@@ -90,7 +91,7 @@ impl PathInterface for Windows {
                         last = j;
 
                         while j < len {
-                            if !is_path_separator(char_code_at(path, j as usize) as u32) {
+                            if !is_path_separator(path.char_code_at(j as usize) as u32) {
                                 break;
                             }
                             j += 1;
@@ -100,7 +101,7 @@ impl PathInterface for Windows {
                             last = j;
 
                             while j < len {
-                                if is_path_separator(char_code_at(path, j as usize) as u32) {
+                                if is_path_separator(path.char_code_at(j as usize) as u32) {
                                     break;
                                 }
                                 j += 1;
@@ -114,10 +115,10 @@ impl PathInterface for Windows {
                     }
                 }
             } else if is_windows_device_root(code as u32) {
-                if char_code_at(path, 1) as u32 == CHAR_COLON {
+                if path.char_code_at(1) as u32 == CHAR_COLON {
                     root_end = 2;
                     if len > 2 {
-                        if is_path_separator(char_code_at(path, 2) as u32) {
+                        if is_path_separator(path.char_code_at(2) as u32) {
                             if len == 3 {
                                 ret.root = path.to_string();
                                 ret.dir = path.to_string();
@@ -140,18 +141,18 @@ impl PathInterface for Windows {
         }
 
         if root_end > 0 {
-            ret.root = js_slice(path, 0, root_end as isize);
+            ret.root = path.slice(0, root_end).to_string();
         }
 
         let mut start_dot = -1;
-        let mut start_part = root_end as isize;
+        let mut start_part = root_end;
         let mut end = -1;
         let mut matched_slash = true;
         let mut i = (path.len() - 1) as isize;
         let mut pre_dot_state = 0;
 
         while i >= root_end {
-            code = char_code_at(path, i as usize);
+            code = path.char_code_at(i as usize);
             if is_path_separator(code as u32) {
                 if !matched_slash {
                     start_part = i + 1;
@@ -181,14 +182,14 @@ impl PathInterface for Windows {
             || (pre_dot_state == 1 && start_dot == end - 1 && start_dot == start_part + 1)
         {
             if end != -1 {
-                let slice = js_slice(path, start_part, end);
-                ret.base = slice.clone();
-                ret.name = slice;
+                let slice = path.slice(start_part, end);
+                ret.base = slice.to_string();
+                ret.name = slice.to_string();
             }
         } else {
-            ret.name = js_slice(path, start_part, start_dot);
-            ret.base = js_slice(path, start_part, end);
-            ret.ext = js_slice(path, start_dot, end);
+            ret.name = path.slice(start_part, start_dot).to_string();
+            ret.base = path.slice(start_part, end).to_string();
+            ret.ext = path.slice(start_dot, end).to_string();
         }
 
         ret
@@ -395,7 +396,7 @@ impl PathInterface for Windows {
             return false;
         }
 
-        let code = char_code_at(path, 0);
+        let code = path.char_code_at(0);
 
         if is_path_separator(code as u32) {
             // HACK: shut up compiler...
@@ -403,8 +404,8 @@ impl PathInterface for Windows {
             return var_name;
         } else if is_windows_device_root(code as u32)
             && len > 2
-            && char_code_at(path, 1) as u32 == CHAR_COLON
-            && is_path_separator(char_code_at(path, 2) as u32)
+            && path.char_code_at(1) as u32 == CHAR_COLON
+            && is_path_separator(path.char_code_at(2) as u32)
         {
             return true;
         }
