@@ -2,7 +2,8 @@
 resolver = '2'
 members = [
   "spellrs_filetype",
-  "spellrs_url"
+  "spellrs_url",
+  "spellrs_js",
 ]
 
 [package]

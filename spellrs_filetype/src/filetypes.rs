@@ -263,19 +263,6 @@ fn def_to_reg_exp(def: &FileTypeDefinition) -> Option<RegExpMatchToFileTypeId> {
     })
 }
 
-trait IndexOf {
-    fn index_of(&self, pat: char, position: Option<usize>) -> Option<usize>;
-}
-
-impl IndexOf for String {
-    fn index_of(&self, pat: char, position: Option<usize>) -> Option<usize> {
-        self.to_string()
-            .chars()
-            .enumerate()
-            .position(|(i, c)| c == pat && i >= position.unwrap_or(0))
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
