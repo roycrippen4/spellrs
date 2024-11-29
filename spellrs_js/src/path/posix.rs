@@ -37,51 +37,6 @@ impl PathInterface for Posix {
         "/"
     }
 
-    /// Returns an object containing the parsed components of the path.
-    ///
-    /// This function is a faithful port of the Deno implementation of path parsing,
-    /// adapted for Rust. Credit to the Deno project for the original implementation.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use spellrs_js::path::parse;
-    ///
-    /// // Example for Windows
-    /// #[cfg(windows)]
-    /// {
-    ///     let parsed_path = parse(r"C:\path\to\script.rs");
-    ///     assert_eq!(parsed_path.root, r"C:\");
-    ///     assert_eq!(parsed_path.dir, r"C:\path\to");
-    ///     assert_eq!(parsed_path.base, "script.rs");
-    ///     assert_eq!(parsed_path.ext, ".rs");
-    ///     assert_eq!(parsed_path.name, "script");
-    /// }
-    ///
-    /// // Example for Unix-like systems
-    /// #[cfg(unix)]
-    /// {
-    ///     let parsed_path = parse("/path/to/dir/script.rs");
-    ///     assert_eq!(parsed_path.root, "/");
-    ///     assert_eq!(parsed_path.dir, "/path/to/dir");
-    ///     assert_eq!(parsed_path.base, "script.rs");
-    ///     assert_eq!(parsed_path.ext, ".rs");
-    ///     assert_eq!(parsed_path.name, "script");
-    /// }
-    /// ```
-    ///
-    /// # Arguments
-    ///
-    /// * `path` - A path to process.
-    ///
-    /// # Returns
-    ///
-    /// An object with the parsed path components.
-    ///
-    /// # Attribution
-    ///
-    /// This implementation is a faithful port of the Deno project's `@std/path/parse` function.
-    /// See [Deno](https://deno.land/) for the original implementation.
     fn parse(path: &str) -> ParsedPath {
         let mut ret = ParsedPath {
             dir: "".to_string(),

@@ -8,15 +8,18 @@
 ///
 /// # Examples
 /// ```rust
-/// use my_crate::JS;
+/// use spellrs_js::JS;
 ///
 /// let s = "hello world";
 ///
 /// // Get the Unicode code point of a character
 /// assert_eq!(s.char_code_at(1), 101); // Unicode for 'e'
 ///
-/// // Slice the string
-/// assert_eq!(s.js_slice(0, 5), "hello");
+/// // Slice the &str
+/// assert_eq!(s.slice(0, 5), "hello");
+///
+/// // Slice the String
+/// assert_eq!(s.to_string().slice(0, 5), "hello");
 ///
 /// // Find the index of a character
 /// assert_eq!(s.index_of('o', None), Some(4));
@@ -33,6 +36,8 @@ pub trait JS {
     ///
     /// # Examples
     /// ```rust
+    /// use spellrs_js::JS;
+    ///
     /// let s = "hello";
     /// assert_eq!(s.char_code_at(1), 101); // Unicode for 'e'
     /// assert_eq!(s.char_code_at(10), -1); // Out of bounds
@@ -51,9 +56,11 @@ pub trait JS {
     ///
     /// # Examples
     /// ```rust
+    /// use spellrs_js::JS;
+    ///
     /// let s = "hello world";
-    /// assert_eq!(s.js_slice(0, 5), "hello"); // Extracts "hello"
-    /// assert_eq!(s.js_slice(-5, -1), "worl"); // Extracts "worl" (negative indexing)
+    /// assert_eq!(s.slice(0, 5), "hello"); // Extracts "hello"
+    /// assert_eq!(s.slice(-5, -1), "worl"); // Extracts "worl" (negative indexing)
     /// ```
     fn slice(&self, start: isize, end: isize) -> Self;
 
@@ -69,6 +76,8 @@ pub trait JS {
     ///
     /// # Examples
     /// ```rust
+    /// use spellrs_js::JS;
+    ///
     /// let s = "hello world";
     /// assert_eq!(s.index_of('o', None), Some(4)); // Finds 'o' at index 4
     /// assert_eq!(s.index_of('o', Some(5)), Some(7)); // Starts search at index 5, finds 'o' at index 7
