@@ -261,7 +261,7 @@ impl PathInterface for Posix {
                         return to.slice((to_start + i) as isize, to.len() as isize);
                     }
                 } else if from_len > length {
-                    if is_posix_path_separator(to.char_code_at(from_start + i) as u32) {
+                    if is_posix_path_separator(from.char_code_at(from_start + i) as u32) {
                         // We get here if `to` is the exact base path for `from`.
                         // For example: from='/foo/bar/baz'; to='/foo/bar'
                         last_common_sep = Some(i);
@@ -274,7 +274,7 @@ impl PathInterface for Posix {
                 break;
             }
             let from_code = from.char_code_at(from_start + i);
-            let to_code = from.char_code_at(to_start + i);
+            let to_code = to.char_code_at(to_start + i);
 
             if from_code != to_code {
                 break;
