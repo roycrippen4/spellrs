@@ -4,6 +4,7 @@ use crate::{
 };
 use once_cell::sync::Lazy;
 use regex::Regex;
+use spellrs_js::JS;
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
