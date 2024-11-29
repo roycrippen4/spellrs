@@ -4,8 +4,8 @@ mod windows;
 
 use std::env;
 
-use posix::Posix;
-use windows::Windows;
+pub use posix::Posix;
+pub use windows::Windows;
 
 /// If `std::env::consts::OS` resolves to "windows", then the windows implementation is used.
 /// Otherwise, the posix implementation is used.
@@ -54,9 +54,6 @@ impl PathInterface for DefaultPath {
         }
     }
 }
-
-// pub posix: Posix,
-// pub windows: Windows,
 
 #[derive(Debug, PartialEq)]
 pub struct ParsedPath {
