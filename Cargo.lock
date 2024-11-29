@@ -299,6 +299,7 @@ version = "0.1.0"
 dependencies = [
  "once_cell",
  "regex",
+ "spellrs_js",
  "url",
 ]
 
