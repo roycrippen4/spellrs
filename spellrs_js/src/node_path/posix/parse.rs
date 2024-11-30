@@ -1,423 +1,76 @@
-use std::env;
+use crate::{ParsedPath, JS};
 
-use super::{
-    ParsedPath, PathInterface,
-    _common::{constants::CHAR_FORWARD_SLASH, normalize_string::normalize_string},
-};
-use crate::JS;
+use super::util::escape_special_chars;
 
-fn is_posix_path_separator(code: u32) -> bool {
-    code == CHAR_FORWARD_SLASH
-}
+pub(crate) fn parse(path: &str) -> ParsedPath {
+    let mut ret = ParsedPath {
+        dir: "".to_string(),
+        root: "".to_string(),
+        base: "".to_string(),
+        name: "".to_string(),
+        ext: "".to_string(),
+    };
 
-fn posix_cwd() -> String {
-    if cfg!(windows) {
-        let cwd = env::current_dir().expect("Failed to get current directory");
-        let path = cwd.to_str().expect("Failed to convert cwd to string");
-        let posix_path = path.replace('\\', "/");
-
-        if let Some(index) = posix_path.find('/') {
-            return posix_path[index..].to_string();
-        }
-
-        posix_path
-    } else {
-        let cwd = env::current_dir().expect("Failed to get current directory");
-        cwd.to_str()
-            .expect("Failed to convert path to string")
-            .to_string()
-    }
-}
-
-/// Posix implementation of the NodeJS path module
-#[derive(Debug)]
-pub struct Posix;
-
-impl PathInterface for Posix {
-    fn sep(&self) -> &'static str {
-        "/"
+    if path.is_empty() {
+        return ret;
     }
 
-    fn parse(&self, path: &str) -> ParsedPath {
-        let mut ret = ParsedPath {
-            dir: "".to_string(),
-            root: "".to_string(),
-            base: "".to_string(),
-            name: "".to_string(),
-            ext: "".to_string(),
-        };
+    let is_absolute = path.starts_with('/');
 
-        if path.is_empty() {
-            return ret;
-        }
-
-        let is_absolute = path.starts_with('/');
-
-        if is_absolute {
-            ret.root = "/".to_string();
-        }
-
-        let trimmed_path = path.trim_end_matches('/');
-        let last_slash_index = trimmed_path.rfind('/');
-
-        if let Some(index) = last_slash_index {
-            if index > 0 || is_absolute {
-                ret.dir = escape_special_chars(trimmed_path.slice(0, index as isize));
-            }
-
-            ret.base = escape_special_chars(
-                trimmed_path.slice(index as isize + 1, trimmed_path.len() as isize),
-            );
-        } else {
-            ret.base = escape_special_chars(trimmed_path);
-        }
-
-        if ret.base == ".." || ret.base == "." {
-            ret.name = ret.base.clone();
-        } else if let Some(dot_index) = ret.base.rfind('.') {
-            if dot_index == 0 {
-                ret.name = ret.base.clone();
-            } else {
-                ret.name = escape_special_chars(&ret.base.slice(0, dot_index as isize));
-                ret.ext = ret.base.slice(dot_index as isize, ret.base.len() as isize);
-            }
-        } else {
-            ret.name = ret.base.clone();
-        }
-
-        if ret.dir.is_empty() && is_absolute {
-            ret.dir = "/".to_string();
-        }
-
-        ret
+    if is_absolute {
+        ret.root = "/".to_string();
     }
 
-    fn resolve(&self, paths: &[&str]) -> String {
-        if paths.len() == 1 && paths[0].is_empty() {
-            return posix_cwd();
+    let trimmed_path = path.trim_end_matches('/');
+    let last_slash_index = trimmed_path.rfind('/');
+
+    if let Some(index) = last_slash_index {
+        if index > 0 || is_absolute {
+            ret.dir = escape_special_chars(trimmed_path.slice(0, index as isize));
         }
 
-        let mut resolved_path = "".to_string();
-        let mut resolved_absolute = false;
-
-        let mut i = paths.len() as isize - 1;
-        while i >= 0 && !resolved_absolute {
-            let path = paths[i as usize];
-            if path.is_empty() {
-                continue;
-            }
-
-            resolved_path = format!("{path}/{resolved_path}");
-            resolved_absolute = path.char_code_at(0) == CHAR_FORWARD_SLASH as i32;
-
-            i -= 1;
-        }
-
-        if !resolved_absolute {
-            let cwd = posix_cwd();
-            resolved_path = format!("{cwd}/{resolved_path}");
-            resolved_absolute = cwd.char_code_at(0) == CHAR_FORWARD_SLASH as i32;
-        }
-
-        resolved_path = normalize_string(
-            &resolved_path,
-            !resolved_absolute,
-            '/',
-            is_posix_path_separator,
+        ret.base = escape_special_chars(
+            trimmed_path.slice(index as isize + 1, trimmed_path.len() as isize),
         );
-
-        if resolved_absolute {
-            return format!("/{resolved_path}");
-        }
-
-        match !resolved_path.is_empty() {
-            true => resolved_path,
-            false => ".".to_string(),
-        }
+    } else {
+        ret.base = escape_special_chars(trimmed_path);
     }
 
-    fn normalize(&self, path: &str) -> String {
-        if path.is_empty() {
-            return ".".to_string();
+    if ret.base == ".." || ret.base == "." {
+        ret.name = ret.base.clone();
+    } else if let Some(dot_index) = ret.base.rfind('.') {
+        if dot_index == 0 {
+            ret.name = ret.base.clone();
+        } else {
+            ret.name = escape_special_chars(&ret.base.slice(0, dot_index as isize));
+            ret.ext = ret.base.slice(dot_index as isize, ret.base.len() as isize);
         }
-
-        let is_absolute = path.starts_with('/');
-        let trailing_separator = path.ends_with('/');
-        let mut path = normalize_string(path, !is_absolute, '/', is_posix_path_separator);
-
-        if path.is_empty() {
-            if is_absolute {
-                return "/".to_string();
-            }
-            if trailing_separator {
-                return "./".to_string();
-            } else {
-                return ".".to_string();
-            }
-        }
-
-        if trailing_separator {
-            path.push('/');
-        }
-
-        match is_absolute {
-            true => format!("/{path}"),
-            false => path,
-        }
+    } else {
+        ret.name = ret.base.clone();
     }
 
-    fn relative(&self, from: &str, to: &str) -> String {
-        if from == to {
-            return "".to_string();
-        }
-
-        let from = Posix.resolve(&[from]);
-        let to = Posix.resolve(&[to]);
-
-        if from == to {
-            return "".to_string();
-        }
-
-        let mut from_start = 1;
-        let from_end = from.len();
-
-        while from_start < from_end {
-            if !is_posix_path_separator(to.char_code_at(from_start) as u32) {
-                break;
-            }
-            from_start += 1;
-        }
-        let from_len = from_end - from_start;
-
-        // trim any leading backslashes
-        let mut to_start = 1;
-        let to_end = to.len();
-        while to_start < to_end {
-            if !is_posix_path_separator(to.char_code_at(to_start) as u32) {
-                break;
-            }
-            to_start += 1;
-        }
-        let to_len = to_end - to_start;
-
-        let length = if from_len < to_len { from_len } else { to_len };
-        let mut last_common_sep = None;
-        let mut i = 0;
-
-        while i <= length {
-            if i == length {
-                if to_len > length {
-                    if is_posix_path_separator(to.char_code_at(to_start + i) as u32) {
-                        // We get here if `from` is the exact base path for `to`.
-                        // For example: from='/foo/bar'; to='/foo/bar/baz'
-                        return to.slice((to_start + i) as isize + 1, to.len() as isize);
-                    } else if i == 0 {
-                        // We get here if `from` is the root
-                        // For example: from='/'; to='/foo'
-                        return to.slice((to_start + i) as isize, to.len() as isize);
-                    }
-                } else if from_len > length {
-                    if is_posix_path_separator(from.char_code_at(from_start + i) as u32) {
-                        // We get here if `to` is the exact base path for `from`.
-                        // For example: from='/foo/bar/baz'; to='/foo/bar'
-                        last_common_sep = Some(i);
-                    } else if i == 0 {
-                        // We get here if `to` is the root.
-                        // For example: from='/foo'; to='/'
-                        last_common_sep = Some(0);
-                    }
-                }
-                break;
-            }
-            let from_code = from.char_code_at(from_start + i);
-            let to_code = to.char_code_at(to_start + i);
-
-            if from_code != to_code {
-                break;
-            } else if is_posix_path_separator(from_code as u32) {
-                last_common_sep = Some(i);
-            }
-            i += 1
-        }
-
-        let mut out = "".to_string();
-
-        // Generate the relative path based on the path difference between `to`
-        // and `from`
-        let mut i = match last_common_sep {
-            Some(last_common_sep) => from_start + last_common_sep + 1,
-            None => from_start,
-        };
-        while i <= from_end {
-            if i == from_end || is_posix_path_separator(from.char_code_at(i) as u32) {
-                if out.is_empty() {
-                    out += "..";
-                } else {
-                    out += "/.."
-                }
-            }
-            i += 1;
-        }
-
-        if !out.is_empty() {
-            let start_idx = match last_common_sep {
-                Some(last_common_sep) => to_start + last_common_sep,
-                None => to_start - 1,
-            };
-            let slice = to.slice(start_idx as isize, to.len() as isize);
-            return out + &slice;
-        }
-
-        to_start = match last_common_sep {
-            Some(last_common_sep) => to_start + last_common_sep,
-            None => to_start - 1,
-        };
-
-        if is_posix_path_separator(to.char_code_at(to_start) as u32) {
-            to_start += 1;
-        }
-
-        to.slice(to_start as isize, to.len() as isize)
+    if ret.dir.is_empty() && is_absolute {
+        ret.dir = "/".to_string();
     }
 
-    fn is_absolute(&self, path: &str) -> bool {
-        !path.is_empty() && path.starts_with('/')
-    }
-}
-
-fn escape_special_chars(input: &str) -> String {
-    // handle null terminated bytes
-    if input.contains(r"\0") {
-        return input.replace(r"\0", r"\u0000");
-    }
-
-    if input.contains("\\") {
-        return input.replace("\\", "\\\\");
-    }
-
-    input.to_string()
+    ret
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::ParsedPath;
 
-    #[test]
-    fn test_posix_normalize() {
-        let cases = vec![
-            ("/path/to/some/../folder", "/path/to/folder"),
-            ("./relative/path/./to/file", "relative/path/to/file"),
-            ("C:\\folder\\..\\file.txt", "C:\\folder\\..\\file.txt"),
-            ("/another/path/./to/normalize", "/another/path/to/normalize"),
-            ("../outside/relative/path", "../outside/relative/path"),
-            ("/root//double/slash/", "/root/double/slash/"),
-            ("folder/with/extra/../..", "folder"),
-            ("/final/example//path", "/final/example/path"),
-        ];
-
-        for (i, (path, expected)) in cases.iter().enumerate() {
-            let result = Posix.normalize(path);
-            assert_eq!(
-                &result, expected,
-                "\n\nPATH {i} FAILED\ninput:    {path}\nresult  : {:?}\nexpected: {:?}\n\n",
-                result, expected
-            );
-        }
-    }
+    use super::parse;
 
     #[test]
     fn test_posix_parse() {
         let cases = get_parse_cases();
 
         for (i, (path, expected)) in cases.iter().enumerate() {
-            let result = Posix.parse(path);
+            let result = parse(path);
             assert_eq!(
                 &result, expected,
                 "\n\nPATH {i} FAILED\ninput:    {path}\nresult  : {:?}\nexpected: {:?}\n\n",
-                result, expected
-            );
-        }
-    }
-
-    #[test]
-    fn test_posix_resolve() {
-        #[rustfmt::skip]
-        let cases: Vec<(&[&str], &str)> = vec![
-            (&["/absolute/path/one"], "/absolute/path/one"),
-            (&["./relative/path/two"], "/home/roy/dev/rust/spellrs/spellrs_js/relative/path/two"),
-            (&["../relative/parent/path/three"], "/home/roy/dev/rust/spellrs/relative/parent/path/three"),
-            (&["/absolute/../path/four"], "/path/four"),
-            (&["/absolute/path/five/.."], "/absolute/path"),
-            (&["./relative/path/six/."], "/home/roy/dev/rust/spellrs/spellrs_js/relative/path/six"),
-            (&["../../relative/parent/path/seven"], "/home/roy/dev/rust/relative/parent/path/seven"),
-            (&["/absolute/path/eight/../../relative/path/nine"], "/absolute/relative/path/nine"),
-            (&["/absolute/./path/ten"], "/absolute/path/ten"),
-            (&["/absolute/path/eleven/../twelve"], "/absolute/path/twelve"),
-            (&["relative/path/thirteen"], "/home/roy/dev/rust/spellrs/spellrs_js/relative/path/thirteen"),
-            (&["relative/./path/fourteen"], "/home/roy/dev/rust/spellrs/spellrs_js/relative/path/fourteen"),
-            (&["relative/../path/fifteen"], "/home/roy/dev/rust/spellrs/spellrs_js/path/fifteen"),
-            (&["./"], "/home/roy/dev/rust/spellrs/spellrs_js"),
-            (&["/"], "/"),
-            (&["../"], "/home/roy/dev/rust/spellrs"),
-            (&[""], "/home/roy/dev/rust/spellrs/spellrs_js"),
-            (&["./relative", "../parent", "final/destination"], "/home/roy/dev/rust/spellrs/spellrs_js/parent/final/destination"),
-            (&["/absolute", "./relative", "../parent", "final"], "/absolute/parent/final"),
-            (&["/", "absolute/path", "to/resolve"], "/absolute/path/to/resolve"),
-            (&["", "/absolute", "path/to/test"], "/absolute/path/to/test"),
-            (&["relative", "/absolute", "./path/overwrite"], "/absolute/path/overwrite"),
-            (&["../relative", "next", "/absolute/path"], "/absolute/path"),
-            (&["../../relative", "./nested/dir", "final"], "/home/roy/dev/rust/relative/nested/dir/final"),
-            (&["./", "../", "/absolute"], "/absolute"),
-            (&["../", "./nested", "../../parent", "final"], "/home/roy/dev/rust/parent/final"),
-            (&["/absolute", "/overwrite/absolute/path"], "/overwrite/absolute/path"),
-            (&["/foo", "bar", "baz/asdf", "quux", ".."], "/foo/bar/baz/asdf")
-        ];
-
-        for (i, (paths, expected)) in cases.iter().enumerate() {
-            let result = Posix.resolve(paths);
-            assert_eq!(
-                &result, expected,
-                "\n\nCASE {i} FAILED\nPATHS    : \"{:?}\"\nresult  : {:?}\nexpected: {:?}\n\n",
-                paths, result, expected
-            );
-        }
-    }
-
-    #[test]
-    fn test_posix_relative() {
-        let cases: Vec<((&str, &str), String)> = vec![
-            (("/", "/"), "".into()),
-            (("/foo/bar", "/foo/bar"), "".into()),
-            (("/foo", "/foo/bar"), "bar".into()),
-            (("/foo/bar", "/foo"), "..".into()),
-            (("/foo/bar", "/foo/baz"), "../baz".into()),
-            (("/foo/bar/baz", "/foo/bar/qux"), "../qux".into()),
-            (("/foo/bar/baz", "/foo/qux/quux"), "../../qux/quux".into()),
-            (("/foo/bar", "/baz/qux"), "../../baz/qux".into()),
-            (("/", "/foo"), "foo".into()),
-            (("/foo", "/"), "..".into()),
-            (("/", "/foo/bar"), "foo/bar".into()),
-            (("/foo/bar", "/"), "../..".into()),
-            (("/foo/bar/baz", "/foo/bar"), "..".into()),
-            (("/foo/bar", "/foo/bar/baz/qux"), "baz/qux".into()),
-            (("/foo/bar/..", "/foo/baz"), "baz".into()),
-            (("/foo/bar/.", "/foo/bar/baz"), "baz".into()),
-            (("/foo/../bar", "/bar/baz"), "baz".into()),
-            (("/foo/./bar", "/foo/bar"), "".into()),
-            (("/foo/bar/", "/foo/bar/baz/"), "baz".into()),
-            (("/foo/bar/", "/foo/"), "..".into()),
-            (("/foo", "/foo/bar/."), "bar".into()),
-            (("/foo/.", "/foo/bar"), "bar".into()),
-            (("/foo/..", "/bar"), "bar".into()),
-            (("/foo/..", "/foo"), "foo".into()),
-            (("/foo/bar", "/foo/bar/.."), "..".into()),
-        ];
-
-        for (i, ((from, to), expected)) in cases.iter().enumerate() {
-            let result = Posix.relative(from, to);
-            assert_eq!(
-                &result, expected,
-                "\n\nCASE {i} FAILED\nFROM    : \"{from}\"\nTO      : \"{to}\"\nresult  : {:?}\nexpected: {:?}\n\n",
                 result, expected
             );
         }
