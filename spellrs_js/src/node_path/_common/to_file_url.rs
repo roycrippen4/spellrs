@@ -15,7 +15,7 @@ pub fn encode_whitespace(input: &str) -> String {
     .cloned()
     .collect();
 
-    let re = Regex::new(r"[\s]").unwrap();
+    let re = Regex::new(r"[\x09\x0A\x0B\x0C\x0D\x20]").unwrap();
 
     re.replace_all(input, |caps: &regex::Captures| {
         let ch = caps[0].chars().next().unwrap(); // Extract the matched character

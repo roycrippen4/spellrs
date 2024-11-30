@@ -2,7 +2,7 @@ use std::env;
 
 use url::Url;
 
-use super::{ParsedPath, PathInterface, Posix, Windows};
+use super::{ParsedPath, PathInterface, Posix, Res, Windows};
 
 #[derive(Debug)]
 pub struct NodePath {
@@ -18,10 +18,10 @@ impl NodePath {
         }
     }
 
-    pub fn to_file_url(path: &str) -> Url {
-        match env::consts::OS {
-            "windows" => Windows::to_file_url(path),
-            _ => Posix::to_file_url(path),
+    pub fn to_file_url(path: &str) -> Res<Url> {
+        match cfg!(windows) {
+            true => Windows::to_file_url(path),
+            false => Posix::to_file_url(path),
         }
     }
 }

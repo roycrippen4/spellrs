@@ -3,23 +3,26 @@ mod normalize;
 mod parse;
 mod relative;
 mod resolve;
+mod to_file_url;
 mod util;
 
+use is_absolute::is_absolute;
 use normalize::normalize;
 use parse::parse;
 use relative::relative;
 use resolve::resolve;
+use to_file_url::to_file_url;
 use url::Url;
 
-use super::{ParsedPath, PathInterface};
+use super::{ParsedPath, PathInterface, Res};
 
 /// Posix implementation of the NodeJS path module
 #[derive(Debug)]
 pub struct Posix;
 
 impl Posix {
-    pub fn to_file_url(_path: &str) -> Url {
-        todo!()
+    pub fn to_file_url(path: &str) -> Res<Url> {
+        to_file_url(path)
     }
 }
 
@@ -45,6 +48,6 @@ impl PathInterface for Posix {
     }
 
     fn is_absolute(&self, path: &str) -> bool {
-        !path.is_empty() && path.starts_with('/')
+        is_absolute(path)
     }
 }
