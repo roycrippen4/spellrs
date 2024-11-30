@@ -12,7 +12,7 @@ pub fn is_file_url(url: &StUrl) -> bool {
     has_protocol(url, "file:")
 }
 
-pub fn to_file_path_or_href(url: &StUrl) -> String {
+pub fn to_filepath_or_href(url: &StUrl) -> String {
     match is_file_url(url) {
         true => to_file_path(url),
         false => url.to_string(),

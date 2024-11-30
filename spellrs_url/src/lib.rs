@@ -13,7 +13,7 @@ pub use default_file_url_builder::{
     encode_path_chars, normalize_file_path_for_url, to_file_dir_url, to_file_url,
 };
 pub use file_url::{
-    file_url_to_path, is_file_url, path_windows_drive_letter_to_upper, to_file_path_or_href,
+    file_url_to_path, is_file_url, path_windows_drive_letter_to_upper, to_filepath_or_href,
     RE_WINDOWS_PATH_DRIVE_LETTER,
 };
 pub use file_url_builder::FileUrlBuilder;
