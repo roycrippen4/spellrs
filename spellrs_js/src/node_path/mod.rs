@@ -1,7 +1,8 @@
 mod _common;
+mod _internal;
 mod path;
-mod posix;
-mod windows;
+pub(crate) mod posix;
+pub(crate) mod windows;
 
 use std::{error::Error, fmt::Debug};
 
@@ -18,13 +19,4 @@ pub struct ParsedPath {
     pub base: String,
     pub name: String,
     pub ext: String,
-}
-
-pub trait PathInterface: Debug + Send + Sync {
-    fn sep(&self) -> &'static str;
-    fn resolve(&self, paths: &[&str]) -> String;
-    fn parse(&self, path: &str) -> ParsedPath;
-    fn normalize(&self, path: &str) -> String;
-    fn relative(&self, from: &str, to: &str) -> String;
-    fn is_absolute(&self, path: &str) -> bool;
 }

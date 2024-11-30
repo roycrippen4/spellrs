@@ -15,40 +15,42 @@ use to_file_url::to_file_url;
 
 use url::Url;
 
-use super::{ParsedPath, PathInterface, Res};
+use super::{ParsedPath, Res, _internal::path_to_file_url::path_to_file_url};
 
 /// Windows implementation of the NodeJS path module
 #[derive(Debug)]
 pub struct Windows;
 
 impl Windows {
-    pub fn to_file_url(path: &str) -> Res<Url> {
+    pub fn path_to_file_url(&self, filepath: &str, windows: Option<bool>) -> Res<Url> {
+        path_to_file_url(filepath, windows)
+    }
+
+    pub fn to_file_url(&self, path: &str) -> Res<Url> {
         to_file_url(path)
     }
-}
 
-impl PathInterface for Windows {
-    fn sep(&self) -> &'static str {
+    pub fn sep(&self) -> &'static str {
         r"\"
     }
 
-    fn parse(&self, path: &str) -> ParsedPath {
+    pub fn parse(&self, path: &str) -> ParsedPath {
         parse(path)
     }
 
-    fn resolve(&self, paths: &[&str]) -> String {
+    pub fn resolve(&self, paths: &[&str]) -> String {
         resolve(paths)
     }
 
-    fn normalize(&self, path: &str) -> String {
+    pub fn normalize(&self, path: &str) -> String {
         normalize(path)
     }
 
-    fn relative(&self, from: &str, to: &str) -> String {
+    pub fn relative(&self, from: &str, to: &str) -> String {
         relative(from, to)
     }
 
-    fn is_absolute(&self, path: &str) -> bool {
+    pub fn is_absolute(&self, path: &str) -> bool {
         is_absolute(path)
     }
 }

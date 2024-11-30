@@ -56,6 +56,7 @@ mod test {
     fn test_posix_resolve() {
         #[rustfmt::skip]
         let cases: Vec<(&[&str], &str)> = vec![
+            (&[], "/home/roy/dev/rust/spellrs/spellrs_js"),
             (&["/absolute/path/one"], "/absolute/path/one"),
             (&["./relative/path/two"], "/home/roy/dev/rust/spellrs/spellrs_js/relative/path/two"),
             (&["../relative/parent/path/three"], "/home/roy/dev/rust/spellrs/relative/parent/path/three"),

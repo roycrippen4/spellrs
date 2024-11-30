@@ -2,7 +2,7 @@ use std::env;
 
 use url::Url;
 
-use super::{ParsedPath, PathInterface, Posix, Res, Windows};
+use super::{ParsedPath, Posix, Res, Windows, _internal::path_to_file_url::path_to_file_url};
 
 #[derive(Debug)]
 pub struct NodePath {
@@ -10,65 +10,63 @@ pub struct NodePath {
     pub posix: Posix,
 }
 
-impl NodePath {
-    pub fn new() -> Self {
+impl Default for NodePath {
+    fn default() -> Self {
         Self {
             win32: Windows,
             posix: Posix,
         }
     }
+}
 
-    pub fn to_file_url(path: &str) -> Res<Url> {
+impl NodePath {
+    pub fn path_to_file_url(&self, filepath: &str, windows: Option<bool>) -> Res<Url> {
+        path_to_file_url(filepath, windows)
+    }
+
+    pub fn to_file_url(&self, path: &str) -> Res<Url> {
         match cfg!(windows) {
-            true => Windows::to_file_url(path),
-            false => Posix::to_file_url(path),
+            true => Windows.to_file_url(path),
+            false => Posix.to_file_url(path),
         }
     }
-}
 
-impl Default for NodePath {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PathInterface for NodePath {
-    fn resolve(&self, paths: &[&str]) -> String {
+    pub fn resolve(&self, paths: &[&str]) -> String {
         match env::consts::OS {
             "windows" => Windows.resolve(paths),
             _ => Posix.resolve(paths),
         }
     }
 
-    fn parse(&self, path: &str) -> ParsedPath {
+    pub fn parse(&self, path: &str) -> ParsedPath {
         match env::consts::OS {
             "windows" => Windows.parse(path),
             _ => Posix.parse(path),
         }
     }
 
-    fn normalize(&self, path: &str) -> String {
+    pub fn normalize(&self, path: &str) -> String {
         match env::consts::OS {
             "windows" => Windows.normalize(path),
             _ => Posix.normalize(path),
         }
     }
 
-    fn relative(&self, from: &str, to: &str) -> String {
+    pub fn relative(&self, from: &str, to: &str) -> String {
         match env::consts::OS {
             "windows" => Windows.relative(from, to),
             _ => Posix.relative(from, to),
         }
     }
 
-    fn is_absolute(&self, path: &str) -> bool {
+    pub fn is_absolute(&self, path: &str) -> bool {
         match env::consts::OS {
             "windows" => Windows.is_absolute(path),
             _ => Posix.is_absolute(path),
         }
     }
 
-    fn sep(&self) -> &'static str {
+    pub fn sep(&self) -> &'static str {
         match env::consts::OS {
             "windows" => Windows.sep(),
             _ => Posix.sep(),
