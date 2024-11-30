@@ -2,6 +2,8 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use url::Url;
 
+use crate::StUrl;
+
 static SCHEME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z][a-zA-Z0-9+\-.]*:").unwrap());
 
 /// A trait for determining if a value is URL-like.
@@ -59,5 +61,11 @@ impl IsUrlLike for &str {
 impl IsUrlLike for Url {
     fn is_url_like(&self) -> bool {
         true // Always true for Url objects
+    }
+}
+
+impl IsUrlLike for StUrl<'_> {
+    fn is_url_like(&self) -> bool {
+        SCHEME_REGEX.is_match(self.as_str())
     }
 }
