@@ -4,6 +4,7 @@ members = [
   "spellrs_filetype",
   "spellrs_url",
   "spellrs_js",
+  "spellrs_hunspell"
 ]
 
 [package]

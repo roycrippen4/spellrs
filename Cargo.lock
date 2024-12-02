@@ -285,6 +285,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "spellrs_hunspell"
+version = "0.1.0"
+dependencies = [
+ "once_cell",
+ "regex",
+ "url",
+]
+
+[[package]]
 name = "spellrs_js"
 version = "0.1.0"
 dependencies = [
